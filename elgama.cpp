@@ -1,10 +1,10 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-
+//#include <iostream>
+//#include <vector>
+//#include <string>
+//#include <cmath>
+//#include <cstdlib>
+//#include <ctime>
+#include<bits/stdc++.h>
 using namespace std;
 
 typedef long long ll;
@@ -74,7 +74,10 @@ string decrypt(vector<ll> en_msg, ll p, ll key, ll q) {
 int main() {
     srand(time(0));
     
-    string msg = "encryption";
+  //  string msg = "encryption";
+    string msg;
+    cout<<"message :";
+    getline(cin,msg);
     cout << "Original Message: " << msg << endl;
 
     ll q = rand() % 100000 + 10000;  // gi?i h?n nh? hon d? ch?y du?c
