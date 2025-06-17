@@ -1,107 +1,123 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-// Luy th?a co s? base^expo mod m
-int power(int base, int expo, int m) {
+// Kiem tra so nguyen to don gian
+bool isPrime(int n) {
+    if (n <= 1) return false;
+    for (int i = 2; i <= sqrt(n); ++i)
+        if (n % i == 0) return false;
+    return true;
+}
+
+// Luy thua co mod
+int power(int base, int expo, int mod) {
     int res = 1;
-    base = base % m;
+    base = base % mod;
     while (expo > 0) {
         if (expo & 1)
-            res = (res * 1LL * base) % m;
-        base = (base * 1LL * base) % m;
-        expo = expo / 2;
+            res = (res * 1LL * base) % mod;
+        base = (base * 1LL * base) % mod;
+        expo >>= 1;
     }
     return res;
 }
 
-// Euclid m? r?ng d? tìm gcd và x, y sao cho ax + by = gcd(a, b)
+// Euclid mo rong
 int gcdExtended(int a, int b, int &x, int &y) {
     if (a == 0) {
-        x = 0;
-        y = 1;
+        x = 0; y = 1;
         return b;
     }
     int x1, y1;
-    int gcd = gcdExtended(b % a, a, x1, y1);
+    int g = gcdExtended(b % a, a, x1, y1);
     x = y1 - (b / a) * x1;
     y = x1;
-    return gcd;
+    return g;
 }
 
-// Tìm ngh?ch d?o modular: d sao cho (e * d) % phi == 1
+// Tim nghich dao modular
 int modInverse(int e, int phi) {
     int x, y;
     int g = gcdExtended(e, phi, x, y);
-    if (g != 1)
-        return -1; // Không t?n t?i
-    else
-        return (x % phi + phi) % phi;
+    if (g != 1) return -1;
+    return (x % phi + phi) % phi;
 }
 
-// Sinh khóa RSA
-void generateKeys(int &e, int &d, int &n) {
-    int p = 7919;
-    int q = 1009;
+// Sinh khoa RSA
+bool generateKeys(int p, int q, int e, int &d, int &n) {
+    if (!isPrime(p) || !isPrime(q)) {
+        cout << "p va q phai la so nguyen to.\n";
+        return false;
+    }
     n = p * q;
     int phi = (p - 1) * (q - 1);
-    for (e = 2; e < phi; e++) {
-        if (__gcd(e, phi) == 1)
-            break;
+    if (__gcd(e, phi) != 1) {
+        cout << "e khong nguyen to cung nhau voi phi(n).\n";
+        return false;
     }
     d = modInverse(e, phi);
+    if (d == -1) {
+        cout << "Khong tim duoc d.\n";
+        return false;
+    }
+    return true;
 }
 
-// Mã hóa s? nguyên
+// Ma hoa ky tu
 int encrypt(int m, int e, int n) {
     return power(m, e, n);
 }
 
-// Gi?i mã s? nguyên
+// Giai ma ky tu
 int decrypt(int c, int d, int n) {
     return power(c, d, n);
 }
 
-// Mã hóa chu?i thành m?ng s?
+// Ma hoa chuoi
 vector<int> encryptString(const string &msg, int e, int n) {
     vector<int> encrypted;
     for (char ch : msg) {
-        int m = (int)ch;
-        encrypted.push_back(encrypt(m, e, n));
+        encrypted.push_back(encrypt((int)ch, e, n));
     }
     return encrypted;
 }
 
-// Gi?i mã chu?i t? m?ng s?
+// Giai ma chuoi
 string decryptString(const vector<int> &cipher, int d, int n) {
-    string decrypted = "";
+    string res;
     for (int c : cipher) {
-        int m = decrypt(c, d, n);
-        decrypted += (char)m;
+        res += (char)decrypt(c, d, n);
     }
-    return decrypted;
+    return res;
 }
-
+//61,53,17
 int main() {
-    int e, d, n;
-    generateKeys(e, d, n);
-    
-    cout << "Public Key (e, n): (" << e << ", " << n << ")\n";
-    cout << "Private Key (d, n): (" << d << ", " << n << ")\n";
+    int p, q, e, d, n;
 
-    //string message = "HELLO RSA";
+    cout << "Nhap so nguyen to p: ";
+    cin >> p;
+    cout << "Nhap so nguyen to q: ";
+    cin >> q;
+    cout << "Nhap so nguyen e (nguyen to cung nhau voi (p-1)*(q-1)): ";
+    cin >> e;
+
+    if (!generateKeys(p, q, e, d, n)) return 1;
+
+    cout << "\nKhoa cong khai (e, n): (" << e << ", " << n << ")";
+    cout << "\nKhoa bi mat (d, n): (" << d << ", " << n << ")\n";
+
+    cin.ignore(); // Xoa ky tu '\n' sau cin
     string message;
-    cout << " Message : ";
+    cout << "\nNhap chuoi can ma hoa: ";
     getline(cin, message);
-    cout << "Original Message: " << message << endl;
 
     vector<int> cipher = encryptString(message, e, n);
-    cout << "Encrypted Message (numbers): ";
-    for (int c : cipher)
-        cout << c << " ";
-    cout << endl;
+    cout << "Chuoi sau khi ma hoa (so): ";
+    for (int c : cipher) cout << c << " ";
+    cout << "\n";
 
     string decrypted = decryptString(cipher, d, n);
-    cout << "Decrypted Message: " << decrypted << endl;
+    cout << "Chuoi sau khi giai ma: " << decrypted << "\n";
 
     return 0;
 }

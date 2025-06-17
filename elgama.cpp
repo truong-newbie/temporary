@@ -1,100 +1,124 @@
-//#include <iostream>
-//#include <vector>
-//#include <string>
-//#include <cmath>
-//#include <cstdlib>
-//#include <ctime>
-#include<bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
 using namespace std;
 
 typedef long long ll;
 
-// Tính GCD
-ll gcd(ll a, ll b) {
-    if (a < b)
-        return gcd(b, a);
-    else if (a % b == 0)
-        return b;
-    else
-        return gcd(b, a % b);
+// Kiem tra so nguyen to
+bool isPrime(ll n) {
+    if (n <= 1) return false;
+    for (ll i = 2; i <= sqrt(n); i++)
+        if (n % i == 0) return false;
+    return true;
 }
 
-// Hàm sinh khóa bí m?t (key)
-ll gen_key(ll q) {
-    ll key = rand() % q;
-    while (gcd(q, key) != 1) {
-        key = rand() % q;
-    }
-    return key;
-}
-
-// Luy th?a modulo (a^b mod c)
-ll power(ll a, ll b, ll c) {
-    ll x = 1;
-    ll y = a;
+// Luy thua co mod
+ll power(ll a, ll b, ll m) {
+    ll result = 1;
+    a = a % m;
     while (b > 0) {
-        if (b % 2 != 0)
-            x = (x * y) % c;
-        y = (y * y) % c;
+        if (b % 2 == 1)
+            result = (result * a) % m;
+        a = (a * a) % m;
         b /= 2;
     }
-    return x % c;
+    return result;
 }
 
-// Hàm mã hóa ElGamal
-pair<vector<ll>, ll> encrypt(string msg, ll q, ll h, ll g) {
-    vector<ll> en_msg;
+// Uoc chung lon nhat
+ll gcd(ll a, ll b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
 
-    ll k = gen_key(q);        // khóa bí m?t c?a ngu?i g?i
-    ll s = power(h, k, q);    // s = h^k mod q
-    ll p = power(g, k, q);    // p = g^k mod q
+// Ham ma hoa
+pair<vector<ll>, ll> encrypt(string msg, ll q, ll h, ll g, ll k) {
+    vector<ll> encrypted;
+    ll s = power(h, k, q);
+    ll p = power(g, k, q);
 
-    cout << "g^k used : " << p << endl;
-    cout << "g^ak used : " << s << endl;
+    cout << "g^k dung (p): " << p << "\n";
+    cout << "h^k dung (chia khoa chung s): " << s << "\n";
 
-    for (char ch : msg) {
-        en_msg.push_back(s * int(ch));
+    for (int i = 0; i < msg.length(); i++) {
+        encrypted.push_back(s * (ll)msg[i]);
     }
 
-    return make_pair(en_msg, p);
+    return make_pair(encrypted, p);
 }
 
-// Hàm gi?i mã ElGamal
-string decrypt(vector<ll> en_msg, ll p, ll key, ll q) {
-    string dr_msg;
-    ll h = power(p, key, q);  // h = p^key mod q
-    for (ll val : en_msg) {
-        char ch = char(val / h);
-        dr_msg.push_back(ch);
+// Ham giai ma
+string decrypt(const vector<ll>& encrypted, ll p, ll key, ll q) {
+    string decrypted = "";
+    ll h = power(p, key, q);
+
+    for (int i = 0; i < encrypted.size(); i++) {
+        decrypted += (char)(encrypted[i] / h);
     }
-    return dr_msg;
+
+    return decrypted;
 }
 
-// Hàm chính
 int main() {
-    srand(time(0));
-    
-  //  string msg = "encryption";
+    ll q, g, a, k;
     string msg;
-    cout<<"message :";
-    getline(cin,msg);
-    cout << "Original Message: " << msg << endl;
 
-    ll q = rand() % 100000 + 10000;  // gi?i h?n nh? hon d? ch?y du?c
-    ll g = rand() % q;
+    // Nhap q
+    do {
+        cout << "Nhap so nguyen to q (>1000): ";
+        cin >> q;
+        if (!isPrime(q) || q <= 1000)
+            cout << "q khong hop le. Vui long nhap lai.\n";
+    } while (!isPrime(q) || q <= 1000);
 
-    ll key = gen_key(q);      // khóa bí m?t ngu?i nh?n
-    ll h = power(g, key, q);  // g^a mod q
+    // Nhap g
+    do {
+        cout << "Nhap g (2 <= g < q): ";
+        cin >> g;
+        if (g < 2 || g >= q)
+            cout << "g khong hop le. Vui long nhap lai.\n";
+    } while (g < 2 || g >= q);
 
-    cout << "g used : " << g << endl;
-    cout << "g^a used : " << h << endl;
+    // Nhap khoa rieng a
+    do {
+        cout << "Nhap khoa rieng a (2 <= a < q): ";
+        cin >> a;
+        if (a < 2 || a >= q || gcd(a, q) != 1)
+            cout << "Khoa a khong hop le. Vui long nhap lai.\n";
+    } while (a < 2 || a >= q || gcd(a, q) != 1);
 
-    pair<vector<ll>, ll> encrypted = encrypt(msg, q, h, g);
-    vector<ll> en_msg = encrypted.first;
-    ll p = encrypted.second;
+    // Tinh h = g^a mod q
+    ll h = power(g, a, q);
 
-    string decrypted = decrypt(en_msg, p, key, q);
-    cout << "Decrypted Message: " << decrypted << endl;
+    // Nhap khoa tam thoi k
+    do {
+        cout << "Nhap khoa tam thoi k (2 <= k < q, gcd(k, q) = 1): ";
+        cin >> k;
+        if (k < 2 || k >= q || gcd(k, q) != 1)
+            cout << "Khoa k khong hop le. Vui long nhap lai.\n";
+    } while (k < 2 || k >= q || gcd(k, q) != 1);
+
+    // Nhap thong diep
+    cin.ignore();
+    cout << "Nhap thong diep can ma hoa: ";
+    getline(cin, msg);
+
+    // Goi ham ma hoa
+    pair<vector<ll>, ll> result = encrypt(msg, q, h, g, k);
+    vector<ll> encrypted = result.first;
+    ll p = result.second;
+
+    // Hien thi ma hoa
+    cout << "Thong diep da ma hoa: ";
+    for (int i = 0; i < encrypted.size(); i++) {
+        cout << encrypted[i] << " ";
+    }
+    cout << "\n";
+
+    // Giai ma
+    string decrypted = decrypt(encrypted, p, a, q);
+    cout << "Thong diep sau khi giai ma: " << decrypted << "\n";
 
     return 0;
 }
